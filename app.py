@@ -9,21 +9,21 @@ app = FastAPI()
 client = docker.from_env()
 
 
-@app.post("/upload")
 # async def upload( # for future use
 #     repo_url: str = Form(...),
 #     tech_stack: str = Form(...),
-#     port_number: str = Form(...)
+#     port_number: str = Form(...),
+#     username: str = Form(...)
 # ):
+# Receive the user's repository
+@app.post("/upload")
 async def upload(repo_url: str = Form(...)):
-    # Receive the user's repository
-
     # Clone or download the repository to a temporary directory
     temp_dir = tempfile.mkdtemp()
     clone_repo(repo_url, temp_dir)
 
-    # TODO: enable user to pass in tech stack options and paths for running commands
-    tech_stack = "react-express"  # want to pass this in too eventually
+    # TODO: enable user to pass in tech stack options and (maybe) paths for running commands
+    tech_stack = "react-express"
 
     # Build the Docker container with the user's code
     container_name = generate_unique_container_name()
@@ -33,8 +33,31 @@ async def upload(repo_url: str = Form(...)):
     shutil.rmtree(temp_dir)
 
     # Return the URL to the user
+    # TODO: integrate this with the Nginx - not sure if nginx only needs portnumbers or something more
     url = generate_url(container)
     return JSONResponse(content={"url": url})
+
+
+@app.delete("/containers/{container_id}")
+async def delete_container(container_id: str):
+    try:
+        # Connect to the Docker daemon
+        client = docker.from_env()
+
+        print("FIND ME+++++++++++++++++++++++++++")
+        print(client.containers)
+
+        # Find the container by ID or name
+        container = client.containers.get(container_id)
+        # Stop and remove the container
+        container.stop()
+        container.remove()
+
+        return {"message": f"Container {container_id} deleted successfully"}
+    except docker.errors.NotFound:
+        return {"error": f"Container {container_id} not found"}, 404
+    except Exception as e:
+        return {"error": str(e)}, 500
 
 
 # def add_paths_to_dockerfile(tech_stack, cmds, pths):
@@ -48,7 +71,7 @@ def clone_repo(repo_url, temp_dir):
 
 
 def generate_unique_container_name():
-    # Here's a simple example using a UUID
+    # TODO: name container with username+uuid
     import uuid
 
     return f"container-{str(uuid.uuid4())}"
