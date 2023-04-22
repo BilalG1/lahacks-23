@@ -1,0 +1,15 @@
+Start app.py: 
+uvicorn app:app --host 0.0.0.0 --port 8000
+
+make call to app.py: 
+curl -X POST -F 'repo_url=https://github.com/your-user/your-repo.git' -F 'tech_stack=react-express' http://localhost:8000/upload
+curl -X POST -F 'repo_url=https://github.com/Emmettlsc/FullStackGPT-test-repo' -F 'tech_stack=react-express' http://localhost:8000/upload
+
+
+Example docker file: https://github.com/miguelgrinberg/react-flask-app/blob/main/Dockerfile.combo
+curl -X POST -F 'repo_url=https://github.com/Emmettlsc/FullstackGPT-react-express' -F 'tech_stack=react-express' http://localhost:8000/upload
+
+
+Simple express test (THIS ONE WORKS WITH CURRENT VERSION)
+curl -X POST -F 'repo_url=https://github.com/Emmettlsc/FullStackGPT-express-docker-test' -F 'tech_stack=react-express' http://localhost:8000/upload
+
