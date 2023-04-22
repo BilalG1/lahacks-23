@@ -3,14 +3,23 @@
 </template>
 
 <script setup>
-import { onMounted, ref} from "vue";
+import { onMounted, ref } from "vue";
 import loader from "@monaco-editor/loader";
 
-const code = ref('')
+const socket = io('ws://localhost:8080'); // socket-server port
+let editor = null;
+var isSocket = false // Avoid conflicts between editor change event and socket change event when broadcasting changes
 
-const handleChange = () => {
-  
+// Update text from websocket message
+function changeText(e) {
+  editor.getModel().applyEdits(e.changes) // Apply edits to model
 }
+
+// handle incoming websocket messages
+socket.on('editText', text => {
+  isSocket = true
+  changeText(text)
+});
 
 onMounted(() => {
   loader.init().then((monaco) => {
@@ -20,9 +29,17 @@ onMounted(() => {
       theme: 'vs-dark'
     }
 
-    monaco.editor.create(document.getElementById("editor"),   editorOptions);
+    editor = monaco.editor.create(document.getElementById("editor"), editorOptions);
+
+    // Client side text change event. Send websocket message
+    editor.onDidChangeModelContent(function (e) {
+      if (isSocket === false) {
+        socket.emit('editText', e)
+      } else
+        isSocket = false
+    });
   });
-})
+});
 
 </script>
 
