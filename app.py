@@ -16,7 +16,7 @@ client = docker.from_env()
 #     username: str = Form(...)
 # ):
 # Receive the user's repository
-@app.post("/upload")
+@app.post("/uploadrepo")
 async def upload(repo_url: str = Form(...)):
     # Clone or download the repository to a temporary directory
     temp_dir = tempfile.mkdtemp()
@@ -43,9 +43,6 @@ async def delete_container(container_id: str):
     try:
         # Connect to the Docker daemon
         client = docker.from_env()
-
-        print("FIND ME+++++++++++++++++++++++++++")
-        print(client.containers)
 
         # Find the container by ID or name
         container = client.containers.get(container_id)
