@@ -282,6 +282,44 @@ def select_dockerfile(tech_stack):
     # Return the Dockerfile path for the given tech_stack
     return dockerfile_mapping.get(tech_stack, "containers/Dockerfile.default")
 
+@app.post("/gen-plan")
+async def gen_plan(request: Request):
+    payload = await request.json()
+    objective = payload.get("objective")
+    planPrompt = f"""
+    You are a frontend developer. Your job is to help plan the development of a website using Vue. 
+    Use the following objective to come up with a list of files you would need to create the frontend. 
+    Output your list as an array of dicts. Each dict should be of the form {{ file: 'src/components/HomePage.vue': purpose: 'The first page the user sees' }}.
+    All of your files should be in the src/components directory or a subdirectory and should be .vue files.
+    Objective: {objective}
+    """
+
+    completion = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": planPrompt}]
+    )
+    return completion["choices"][0]["message"]["content"]
+
+@app.post("/gen-file")
+async def gen_file(request: Request):
+    payload = await request.json()
+    objective = payload.get("objective")
+    plan = payload.get("plan")
+
+
+    planPrompt = f"""
+    You are a frontend developer. Your job is to help plan the development of a website using Vue. 
+    Use the following objective to come up with a list of files you would need to create the frontend. 
+    Output your list as an array of dicts. Each dict should be of the form {{ file: 'src/components/HomePage.vue': purpose: 'The first page the user sees' }}.
+    All of your files should be in the src/components directory and should be .vue files
+    Objective: {objective}"""
+
+    completion = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": planPrompt}]
+    )
+    return completion["choices"][0]["message"]["content"]
+
 
 if __name__ == "__main__":
     import uvicorn
