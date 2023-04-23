@@ -73,9 +73,12 @@ onMounted(() => {
     });
   });
 })
+
 const fileList = ref({});
 const fileTree = ref<Tree[]>([]);
+
 function addToFileList(file, parent){
+
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -91,14 +94,18 @@ function addToFileList(file, parent){
     reader.readAsText(file);
   })
 }
+
 function buildTree(filenames) {
   const root = { type: "directory", label: ".", children:[]};
+
   for (const filename of filenames) {
     const parts = filename.split("/");
     let currentNode: any = root;
+
     for (let i = 1; i < parts.length; i++) {
       const nodeName = parts[i];
-      let node: any = currentNode.children?.find((n: any) => n.label === nodeName);
+      let node: any = currentNode.children?.find((n) => n.label === nodeName);
+
       if (!node) {
         console.log(nodeName)
         node = { type: "directory", label: nodeName, content: fileList.value[nodeName].fileContent};
@@ -107,20 +114,26 @@ function buildTree(filenames) {
         }
         currentNode.children.push(node);
       }
+
       currentNode = node;
     }
+
     if (currentNode.type === "directory") {
       continue;
     }
+
     const fileNode = { label: currentNode.label };
     currentNode = currentNode.children ?? currentNode;
     currentNode.children.push(fileNode);
   }
+
   return root;
 }
+
 const handleOpenFolder = async(event) => {
   const files = event.target.files;
   const filePaths = <string[]>[];
+
   for (const file of files) {
     if (!file.isDirectory) {
       const folders = file.webkitRelativePath.split('\/')
@@ -156,6 +169,7 @@ const handleCompile = async() => {
 a {
   color: #42b983;
 }
+
 .common-layout {
   padding:20px;
 }
