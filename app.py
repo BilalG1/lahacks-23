@@ -37,13 +37,19 @@ active_ids = { usrid: datetime.datetime(2023, 1, 1) for usrid in range(375, 379)
 usrid_container_map = {usrid: None for usrid in range(375, 379) }
 usrid_techstack_map = {usrid: None for usrid in range(375, 379) }
 
+
 @app.get('/gen-id')
 def get_id(): 
-    for usrid in range(375, 379):
-        if (datetime.datetime.now() - active_ids[usrid]).total_seconds() > 60 * 10:
-            active_ids[usrid] = datetime.datetime.now()
-            return usrid
+    for id in range(375, 379):
+        if (datetime.datetime.now() - active_ids[id]).total_seconds() > 60 * 10:
+            active_ids[id] = datetime.datetime.now()
+            return id
     return False
+
+@app.post('/reset-ids')
+def reset():
+    global active_ids
+    active_ids = { id: datetime.datetime(2023, 1, 1) for id in range(375, 379) }
 
 # endpoint for edits+additions, initial uploads should use /upload-files/{usrid}
 @app.post("/update-files/{usrid}")
