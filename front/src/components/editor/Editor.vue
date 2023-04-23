@@ -79,6 +79,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref} from "vue";
+import { config } from "../../constants/config";
 import loader from "@monaco-editor/loader";
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import _ from 'lodash'
@@ -208,7 +209,17 @@ const handleCompile = async() => {
     "label": ".",
     "children": fileTree.value
   }
-  console.log(JSON.stringify(obj, null, 2));
+
+  const uid = 375
+  const url = `${config.apiUrl}/upload-files/${uid}/` 
+  const headers = { 'content-type': 'application/json' }
+  const method = 'POST'
+  const body = JSON.stringify({
+    tech_stack: 'vue-flask',
+    file_structure: JSON.stringify(obj)
+  })
+  fetch(url, { method, headers, body })
+  // console.log(JSON.stringify(obj, null, 2));
 }
 
 const handleDragStart = (node: Node, ev: DragEvents) => {

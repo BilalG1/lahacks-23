@@ -11,6 +11,7 @@
     "@quasar/extras": "^1.16.2",
     "@vitejs/plugin-vue": "^4.1.0",
     "element-plus": "^2.3.3",
+    "lodash": "^4.17.21",
     "monaco-editor-webpack-plugin": "^7.0.1",
     "monaco-languageclient": "^5.0.1",
     "quasar": "^2.11.10",
