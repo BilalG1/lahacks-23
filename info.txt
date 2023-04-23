@@ -1,0 +1,75 @@
+postman url:
+http://localhost:8000/upload-files/375?tech_stack=vue-flask
+
+
+
+
+Start app.py: 
+uvicorn app:app --host 0.0.0.0 --port 8000
+
+make call to app.py: 
+curl -X POST -F 'repo_url=https://github.com/your-user/your-repo.git' -F 'tech_stack=react-express' http://localhost:8000/upload
+curl -X POST -F 'repo_url=https://github.com/Emmettlsc/FullStackGPT-test-repo' -F 'tech_stack=react-express' http://localhost:8000/upload
+
+
+Example docker file: https://github.com/miguelgrinberg/react-flask-app/blob/main/Dockerfile.combo
+curl -X POST -F 'repo_url=https://github.com/Emmettlsc/FullstackGPT-react-express' -F 'tech_stack=react-express' http://localhost:8000/upload
+
+
+Simple express test (THIS ONE WORKS WITH CURRENT VERSION)
+curl -X POST -F 'repo_url=https://github.com/Emmettlsc/FullStackGPT-express-docker-test' -F 'tech_stack=react-express' http://localhost:8000/uploadrepo
+
+To delete stop and delete a running docker container: 
+curl -X DELETE "http://localhost:8000/containers/[container id]"
+curl -X DELETE "http://localhost:8000/containers/cb89d76009e6c3549bdcda23739b9c6bbceecd8aad58aba7f7d28285cc1cfb19"
+
+
+To upload files:
+curl -X POST "http://localhost:8000/upload-files/<container_id>" -H "Content-Type: application/json" -d '
+{
+  "label": ".",
+  "children": [
+    {
+      "type": "directory",
+      "label": ".",
+      "children": [
+        {
+          "type": "directory",
+          "label": "server.js",
+          "content": "..."
+        },
+        {
+          "type": "directory",
+          "label": "AHHHdockerfile",
+          "content": "..."
+        },
+        {
+          "type": "directory",
+          "label": "README.md",
+          "content": "..."
+        },
+        {
+          "type": "directory",
+          "label": "package-lock.json",
+          "content": "..."
+        },
+        {
+          "type": "directory",
+          "label": "package.json",
+          "content": ""
+        }
+      ]
+    }
+  ]
+}'
+
+
+
+
+TODO: 
+1. make the github repo upload more robust so it can run more complex projects
+2. setup a shared directory
+3. setup endpoint to upload files to the filesystem
+4. use docker exec to re-execute npm start in the docker container so when changes are made to shared directory they can be reflected
+
+
