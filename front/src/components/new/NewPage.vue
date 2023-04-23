@@ -40,7 +40,7 @@ const handleNext = () => {
   <div class="px-4 py-8 max-w-screen-md mx-auto">
     <div class="text-2xl font-bold pb-10">New project</div>
 
-    <div :class="`text-xl pb-2 italic ${frontendChoice ? 'text-green-400' : ''}`">Frontend</div>
+    <div :class="`text-xl pb-2 italic ${frontendChoice ? 'text-primary' : ''}`">Frontend</div>
     <div class="flex flex-row gap-2">
       <Transition name="fade-up" v-for="opt, ind in frontendOptions"  appear>
         <div 
@@ -61,7 +61,7 @@ const handleNext = () => {
       </Transition>
     </div>
 
-    <div :class="`text-xl pb-2 italic pt-10 ${backendChoice ? 'text-green-400' : ''}`">Backend</div>
+    <div :class="`text-xl pb-2 italic pt-10 ${backendChoice ? 'text-primary' : ''}`">Backend</div>
     <div class="flex flex-row gap-2">
       <Transition name="fade-up" v-for="opt, ind in backendOptions"  appear>
         <div 
@@ -82,7 +82,7 @@ const handleNext = () => {
       </Transition>
     </div>
 
-    <div :class="`text-xl pb-2 italic pt-10 ${databaseChoice ? 'text-green-400' : ''}`">Database</div>
+    <div :class="`text-xl pb-2 italic pt-10 ${databaseChoice ? 'text-primary' : ''}`">Database</div>
     <div class="flex flex-row gap-2">
       <Transition name="fade-up" v-for="opt, ind in databaseOptions"  appear>
         <div 

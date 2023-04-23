@@ -84,7 +84,7 @@ const addItem = () => {
       <Transition v-for="file, ind in filesPlanned" name="fade-left" :key="file.file" appear>
         <div class="rounded-xl bg-gray-700 mb-2 px-4 py-2 flex flex-row justify-between items-center" :style="`transition-delay: ${100*ind*shutoff}ms`">
           <div>
-            <div class="text-green-600">{{ ind+1 }}. {{ file.file }}</div>
+            <div class="text-primary">{{ ind+1 }}. {{ file.file }}</div>
             <div class="text-gray-200">{{ file.purpose }}</div>
           </div>
           <div>

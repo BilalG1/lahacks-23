@@ -108,7 +108,7 @@ function buildTree(filenames) {
 
       if (!node) {
         console.log(nodeName)
-        node = { type: "directory", label: nodeName, content: fileList.value[nodeName].fileContent};
+        node = { type: "directory", label: nodeName, content: fileList.value[nodeName]?.fileContent};
         if (!currentNode.children) {
           currentNode.children = [];
         }
