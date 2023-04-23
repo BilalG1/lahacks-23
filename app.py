@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import openai
 from pydantic import BaseModel
 import datetime
+import subprocess
 
 app = FastAPI()
 client = docker.from_env()
@@ -161,7 +162,7 @@ async def upload(usrid: int, repo_url: str = Form(...)):
 
     # Define the absolute path where you want to mount the shared volume
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    local_mount_path = f"{dir_path}/shared" #HERE
+    local_mount_path = f"{dir_path}/{usrid}" #HERE
 
     # Build the Docker container with the user's code
     container_name = str(usrid)
@@ -220,17 +221,23 @@ def build_and_run_container(temp_dir, container_name, tech_stack, local_mount_pa
     # Create the bind mount
     bind_mount = docker.types.Mount(
         source=local_mount_path,
-        target=f"/usr/src/app/{usrid}", #HERE
+        target=f"/usr/src/app/{usrid}",  # HERE
         type="bind",
     )
 
-    # build and run docker container
-    import subprocess
+    # Build the Docker image
+    subprocess.run(
+        ["docker", "build", "--build-arg", f"PORT1={internal_backend_port}", "--build-arg", f"PORT2={internal_frontend_port}", "-t", container_name, temp_dir],
+        check=True,
+    )
 
-    subprocess.run(["docker", "build", "-t", container_name, temp_dir])
+    # Run the Docker container
     container = client.containers.run(
         image=container_name,
-        ports={f"{internal_frontend_port}/tcp": external_frontend_port, f"{internal_backend_port}/tcp": external_backend_port},
+        ports={
+            f"{internal_frontend_port}/tcp": external_frontend_port,
+            f"{internal_backend_port}/tcp": external_backend_port
+        },
         mounts=[bind_mount],
         detach=True,
     )
@@ -238,7 +245,6 @@ def build_and_run_container(temp_dir, container_name, tech_stack, local_mount_pa
     usrid_container_map[usrid] = container.id
 
     return container
-
 
 def generate_url(container):
     # Generate the URL for the user

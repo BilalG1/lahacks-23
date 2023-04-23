@@ -1,22 +1,36 @@
-file_structure = {
-  "filename": "main",
-  "content": None,
-  "children":[
+{
+    "label": ".",
+    "children": [
+{
+    "type": "directory",
+    "label": ".",
+    "children": [
     {
-      "filename": "child 1",
-      "content": "some txt",
-      "children": []
+        "type": "directory",
+        "label": "server.js",
+        "content": "..."
     },
     {
-      "filename":"subdir",
-      "content": None,
-      "children": [
-        {
-            "filename": "subdir-child",
-            "content": "la hacks",
-            "children": []
-        }
-      ]
+        "type": "directory",
+        "label": "AHHHdockerfile",
+        "content": "..."
+    },
+    {
+        "type": "directory",
+        "label": "README.md",
+        "content": "# FullStackGPT-express-docker-test\n"
+    },
+    {
+        "type": "directory",
+        "label": "package-lock.json",
+        "content": "..."
+    },
+    {
+        "type": "directory",
+        "label": "package.json",
+        "content": "..."
     }
-  ]
+    ]
+}
+]
 }

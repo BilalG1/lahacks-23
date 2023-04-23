@@ -1,3 +1,9 @@
+postman url:
+http://localhost:8000/upload-files/375?tech_stack=vue-flask
+
+
+
+
 Start app.py: 
 uvicorn app:app --host 0.0.0.0 --port 8000
 
@@ -15,10 +21,55 @@ curl -X POST -F 'repo_url=https://github.com/Emmettlsc/FullStackGPT-express-dock
 
 To delete stop and delete a running docker container: 
 curl -X DELETE "http://localhost:8000/containers/[container id]"
-curl -X DELETE "http://localhost:8000/containers/cc66e0b0ebce44130fb4b7d6b8135a8a98e31b627eb37cd47ed1bd187d9d8432"
+curl -X DELETE "http://localhost:8000/containers/cb89d76009e6c3549bdcda23739b9c6bbceecd8aad58aba7f7d28285cc1cfb19"
+
+
+To upload files:
+curl -X POST "http://localhost:8000/upload-files/<container_id>" -H "Content-Type: application/json" -d '
+{
+  "label": ".",
+  "children": [
+    {
+      "type": "directory",
+      "label": ".",
+      "children": [
+        {
+          "type": "directory",
+          "label": "server.js",
+          "content": "..."
+        },
+        {
+          "type": "directory",
+          "label": "AHHHdockerfile",
+          "content": "..."
+        },
+        {
+          "type": "directory",
+          "label": "README.md",
+          "content": "..."
+        },
+        {
+          "type": "directory",
+          "label": "package-lock.json",
+          "content": "..."
+        },
+        {
+          "type": "directory",
+          "label": "package.json",
+          "content": ""
+        }
+      ]
+    }
+  ]
+}'
+
+
+
 
 TODO: 
 1. make the github repo upload more robust so it can run more complex projects
 2. setup a shared directory
 3. setup endpoint to upload files to the filesystem
 4. use docker exec to re-execute npm start in the docker container so when changes are made to shared directory they can be reflected
+
+
