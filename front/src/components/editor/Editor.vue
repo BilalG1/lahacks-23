@@ -211,13 +211,11 @@ const handleCompile = async() => {
   }
 
   const uid = 375
-  const url = `${config.apiUrl}/upload-files/${uid}/` 
+  const tech_stack = 'vue-flask'
+  const url = `${config.apiUrl}/upload-files/${uid}?tech_stack=${tech_stack}` 
   const headers = { 'content-type': 'application/json' }
   const method = 'POST'
-  const body = JSON.stringify({
-    tech_stack: 'vue-flask',
-    file_structure: JSON.stringify(obj)
-  })
+  const body = JSON.stringify(obj)
   fetch(url, { method, headers, body })
   // console.log(JSON.stringify(obj, null, 2));
 }
