@@ -26,8 +26,8 @@ const openUrl = () => {
     />
   </Transition>
   <div class="absolute top-1 right-1">
-    <q-btn v-if="show" icon="link" color="primary" class="mr-1" @click="openUrl" />
-    <q-btn v-if="show" icon="refresh" color="primary" class="mr-1" @click="handleRefresh" />
-    <q-btn :label="show ? 'Hide' : 'Show'" color="primary" @click="show = !show" />
+    <q-btn v-if="show" icon="link" color="primary" class="mr-1" unelevated @click="openUrl" />
+    <q-btn v-if="show" icon="refresh" color="primary" class="mr-1" unelevated @click="handleRefresh" />
+    <q-btn :label="show ? 'Hide' : 'Show'" color="primary" @click="show = !show" unelevated />
   </div>
 </template>

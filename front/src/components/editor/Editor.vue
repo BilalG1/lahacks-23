@@ -15,9 +15,9 @@
                     <label for="file"> Open File </label>
                     <input type="file" id="file" @change="handleOpenFile" hidden >
                   </el-dropdown-item>
-                  <el-dropdown-item>Action 3</el-dropdown-item>
+                  <!-- <el-dropdown-item>Action 3</el-dropdown-item>
                   <el-dropdown-item>Action 4</el-dropdown-item>
-                  <el-dropdown-item>Action 5</el-dropdown-item>
+                  <el-dropdown-item>Action 5</el-dropdown-item> -->
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
@@ -41,6 +41,7 @@ import { onMounted, ref} from "vue";
 import loader from "@monaco-editor/loader";
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import _ from 'lodash'
+
 const code = ref('')
 const activeFile = ref('')
 const editorRef = ref(null)

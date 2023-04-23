@@ -20,15 +20,20 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-active_ids = { id: datetime.datetime(2023, 1, 1) for id in range(375, 379) }
+active_ids = { id: datetime.datetime(2023, 1, 1) for id in range(375, 380) }
 
 @app.get('/gen-id')
 def get_id(): 
-    for id in range(375, 379):
+    for id in range(375, 380):
         if (datetime.datetime.now() - active_ids[id]).total_seconds() > 60 * 10:
             active_ids[id] = datetime.datetime.now()
             return id
     return False
+
+@app.post('/reset-ids')
+def reset():
+    global active_ids
+    active_ids = { id: datetime.datetime(2023, 1, 1) for id in range(375, 380) }
 
 @app.post("/uploadfiles/")
 async def create_upload_files(files: list[UploadFile]):

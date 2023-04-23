@@ -2,8 +2,10 @@
 import { ref } from 'vue';
 import { useQuasar } from 'quasar'
 import { config } from '../../constants/config'
+import { useRouter } from 'vue-router';
 
 const $q = useQuasar()
+const $router = useRouter()
 const prompt = ref('')
 const loading = ref(false)
 const filesPlanned = ref<{ file: string, purpose: string }[]>([])
@@ -55,12 +57,18 @@ const addItem = () => {
   const curFile = { file: addingFilePath.value, purpose: addingPurpose.value }
   filesPlanned.value.push(curFile)
 }
+
+const looksGood = () => {
+  localStorage.prompt = prompt.value
+  localStorage.filePlan = JSON.stringify(filesPlanned.value)
+  $router.push('/editor/new')
+}
 </script>
 
 <template>
   <div v-if="stage === 0" class="text-center px-4 pt-10">
     <Transition name="fade-up" appear>
-      <div class="text-2xl font-bold mb-10 delay-1000f">Enter your website idea here:</div>
+      <div class="text-2xl font-bold mb-10">Enter your website idea here:</div>
     </Transition>
     <q-input
       v-model="prompt"
@@ -84,7 +92,7 @@ const addItem = () => {
       <Transition v-for="file, ind in filesPlanned" name="fade-left" :key="file.file" appear>
         <div class="rounded-xl bg-gray-700 mb-2 px-4 py-2 flex flex-row justify-between items-center" :style="`transition-delay: ${100*ind*shutoff}ms`">
           <div>
-            <div class="text-primary">{{ ind+1 }}. {{ file.file }}</div>
+            <div class="text-primary font-bold">{{ ind+1 }}. {{ file.file }}</div>
             <div class="text-gray-200">{{ file.purpose }}</div>
           </div>
           <div>
@@ -96,13 +104,13 @@ const addItem = () => {
       </Transition>
     </TransitionGroup>
     <div class="text-center mt-10">
-      <q-btn label="Looks Good" color="primary"  />
+      <q-btn label="Looks Good" color="primary" @click="looksGood" />
     </div>
   </div>
 
   <q-dialog v-model="showAddDialog">
     <q-card class="px-4" style="min-width: 300px">
-      <div class="pt-4 pb-4 font-bold text-xl">Add to Plan</div>
+      <div class="pt-4 pb-4 font-bold text-xl text-black">Add to Plan</div>
       <q-input label="File Path" v-model="addingFilePath" />
       <q-input class="pb-2" label="Purpose" v-model="addingPurpose" />
       <div class="text-right pb-2 pt-4">
