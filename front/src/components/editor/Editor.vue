@@ -41,29 +41,24 @@ import { onMounted, ref} from "vue";
 import loader from "@monaco-editor/loader";
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import _ from 'lodash'
-
 const code = ref('')
 const activeFile = ref('')
 const editorRef = ref(null)
 let editor;
-
 const handleNodeClick = (data: Tree) => {
   activeFile.value = data.label
   editor.setValue(fileList.value[data.label].fileContent)
 }
-
 interface Tree {
   label: string
   children?: Tree[]
 }
-
 interface Item {
   filename: string,
   filePath: string,
   fileContent: string | ArrayBuffer | null,
   parent: string
 }
-
 onMounted(() => {
   loader.init().then((monaco) => {
     const editorOptions = {
@@ -71,7 +66,7 @@ onMounted(() => {
       // minimap: { enabled: false },
       theme: 'vs-dark'
     }
-    editor = monaco.editor.create(document.getElementById("editor"),   editorOptions);
+    editor = monaco.editor.create(document.getElementById("editor")!,   editorOptions);
     editor.onDidChangeModelContent(() => {
       // Update the content of the active file in the fileContent object
       fileList.value[activeFile.value].fileContent = editor.getValue();
@@ -87,7 +82,7 @@ function addToFileList(file, parent){
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (event) => {
-      const text = event.target.result;
+      const text = event.target?.result;
       const item = {
         filePath: file.webkitRelativePath,
         fileContent: text,
@@ -105,15 +100,15 @@ function buildTree(filenames) {
 
   for (const filename of filenames) {
     const parts = filename.split("/");
-    let currentNode = root;
+    let currentNode: any = root;
 
     for (let i = 1; i < parts.length; i++) {
       const nodeName = parts[i];
-      let node = currentNode.children?.find((n) => n.label === nodeName);
+      let node: any = currentNode.children?.find((n) => n.label === nodeName);
 
       if (!node) {
         console.log(nodeName)
-        node = { type: "directory", label: nodeName, content: fileList.value[nodeName].fileContent};
+        node = { type: "directory", label: nodeName, content: fileList.value[nodeName]?.fileContent};
         if (!currentNode.children) {
           currentNode.children = [];
         }
@@ -149,7 +144,6 @@ const handleOpenFolder = async(event) => {
   }
   fileTree.value.push(buildTree(filePaths));
 }
-
 const handleOpenFile = async(event) => {
   const file = event.target.files[0];
   await addToFileList(file, parent)
@@ -158,12 +152,10 @@ const handleOpenFile = async(event) => {
     children: []
   });
 }
-
 const defaultProps = {
     children: 'children',
     label: 'label',
 }
-
 const handleCompile = async() => {
   const obj = {
     "label": ".",
@@ -171,7 +163,6 @@ const handleCompile = async() => {
   }
   console.log(JSON.stringify(obj, null, 2));
 }
-
 </script>
 
 <style scoped>
