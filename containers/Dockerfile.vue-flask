@@ -1,0 +1,32 @@
+# gpt generated
+# Use the official Python image as the base image
+FROM python:3.8-slim
+
+# Set the working directory
+WORKDIR /app
+
+# Install Node.js
+RUN apt-get update && apt-get install -y curl && \
+    curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
+    apt-get install -y nodejs
+
+# Copy requirements.txt and package.json
+COPY ./backend/requirements.txt ./backend/
+COPY ./frontend/package*.json ./frontend/
+
+# Install backend and frontend dependencies
+RUN pip install --no-cache-dir -r backend/requirements.txt
+RUN cd frontend && npm ci
+
+# Copy the backend and frontend code
+COPY ./backend ./backend
+COPY ./frontend ./frontend
+
+# Build the Vue frontend
+RUN cd frontend && npm run build
+
+# Expose the backend port
+EXPOSE 80
+
+# Run the Flask server
+CMD ["python", "backend/app.py"]

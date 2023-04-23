@@ -1,0 +1,51 @@
+FROM node:16
+RUN apt-get update && apt-get install -y python
+# Create app directory
+WORKDIR /usr/src/app
+
+# Install app dependencies
+# A wildcard is used to ensure both package.json AND package-lock.json are copied
+# where available (npm@5+)
+COPY package*.json ./
+
+RUN npm install
+# If you are building your code for production
+# RUN npm ci --omit=dev
+
+# Bundle app source
+COPY . .
+
+EXPOSE 8080
+CMD [ "node", "server.js" ]
+
+
+
+
+
+# # gpt generated
+# # Use the official Node.js image as the base image
+# FROM node:14
+
+# # Set the working directory
+# WORKDIR /app
+
+# # Copy package.json and package-lock.json
+# # COPY ./backend/package*.json /app/backend/
+# COPY ./frontend/package*.json /app/frontend/
+
+# # Install backend and frontend dependencies
+# RUN cd backend && npm ci
+# RUN cd frontend && npm ci
+
+# # Copy the backend and frontend code
+# COPY . ./backend
+# COPY . ./frontend
+
+# # Build the React frontend
+# RUN cd frontend && npm run build
+
+# # Expose the backend port
+# EXPOSE 80
+
+# # Run the Express server
+# CMD ["npm", "start", "--prefix", "backend"]
