@@ -1,0 +1,33 @@
+[
+  {
+    "type": "directory",
+    "label": ".",
+    "children": [
+      {
+        "type": "directory",
+        "label": "server.js",
+        "content": "..."
+      },
+      {
+        "type": "directory",
+        "label": "AHHHdockerfile",
+        "content": "..."
+      },
+      {
+        "type": "directory",
+        "label": "README.md",
+        "content": "# FullStackGPT-express-docker-test\n"
+      },
+      {
+        "type": "directory",
+        "label": "package-lock.json",
+        "content": ""
+        },
+      {
+        "type": "directory",
+        "label": "package.json",
+        "content": "..."
+      }
+    ]
+  }
+]
