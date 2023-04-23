@@ -46,6 +46,11 @@ def get_id():
             return usrid
     return False
 
+@app.post('/reset-ids')
+def reset():
+    global active_ids
+    active_ids = { id: datetime.datetime(2023, 1, 1) for id in range(375, 379) }
+
 # endpoint for edits+additions, initial uploads should use /upload-files/{usrid}
 @app.post("/update-files/{usrid}")
 async def upload_files(usrid: int, file_structure: FileNode):
@@ -275,4 +280,4 @@ def select_dockerfile(tech_stack):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=3000)
