@@ -71,18 +71,15 @@ async def upload_files(usrid: int, file_structure: FileNode):
         move_file_and_restart_script = f'''
 import os
 import shutil
-
+import subprocess
 def move_files_up_one_level():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     parent_dir = os.path.dirname(current_dir)
-
     for item in os.listdir(current_dir):
         if item == os.path.basename(__file__):
             continue
-
         item_path = os.path.join(current_dir, item)
         dest_path = os.path.join(parent_dir, item)
-
         if os.path.exists(dest_path):
             if os.path.isfile(dest_path):
                 os.remove(dest_path)
@@ -94,10 +91,13 @@ def move_files_up_one_level():
         elif os.path.isdir(item_path):
             shutil.copytree(item_path, dest_path)
             shutil.rmtree(item_path)
-
+def remove_node_modules_and_install():
+    client_dir = "/usr/src/app/client"
+    subprocess.run(["rm", "-rf", "node_modules"], check=True, cwd=client_dir)
+    subprocess.run(["npm", "install"], check=True, cwd=client_dir)
 if __name__ == '__main__':
     move_files_up_one_level()
-
+    remove_node_modules_and_install()
 '''
 
         # Create/update a file with the move_file_and_restart_script content in the shared directory
