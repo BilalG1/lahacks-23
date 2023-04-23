@@ -1,17 +1,30 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
+import { config } from '../../constants/config';
+import { useQuasar } from 'quasar';
 
+const $q = useQuasar()
 const show  = ref(false)
 const iframe = ref()
-const id = Math.floor(Math.random() * 4 + 5)
-const url = `https://u37${id}.bazzled.com/`
+const id = ref()
 
+onMounted(() => {
+  fetch(`${config.apiUrl}/gen-id`)
+    .then(res => res.json())
+    .then(curId => {
+      id.value = curId
+      if (curId === false) {
+        $q.notify('Out of users, reset')
+      }
+      localStorage.id = id.value
+    })
+})
 const handleRefresh = () => {
   // iframe.value.contentWindow.location.reload();
   iframe.value.src = iframe.value.src
 }
 const openUrl = () => {
-  window.open(url)
+  window.open(`https://u${id.value}.bazzled.com/`)
 }
 </script>
 
@@ -19,7 +32,7 @@ const openUrl = () => {
   <Transition name="fade-up">
     <iframe 
       v-show="show"
-      :src="url" 
+      :src="`https://u${id}.bazzled.com/`" 
       ref="iframe"
       class="border border-white absolute right-0 top-0"
       style="right: 0; top: 0; width: 600px; height: 800px; border-radius: 12px;" 

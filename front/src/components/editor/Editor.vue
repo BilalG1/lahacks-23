@@ -83,7 +83,9 @@ import { config } from "../../constants/config";
 import loader from "@monaco-editor/loader";
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import _ from 'lodash'
+import { useQuasar } from "quasar";
 
+const $q = useQuasar()
 const code = ref('')
 const activeFile = ref('')
 const editorRef = ref(null)
@@ -106,6 +108,7 @@ interface Item {
   parent: string
 }
 onMounted(() => {
+
   loader.init().then((monaco) => {
     const editorOptions = {
       language: language.value,
@@ -210,7 +213,9 @@ const handleCompile = async() => {
     "children": fileTree.value
   }
 
-  const uid = 375
+  const uid = localStorage.id
+  if (!uid)
+    return $q.notify('Out of users, reset')
   const tech_stack = 'vue-flask'
   const url = `${config.apiUrl}/upload-files/${uid}?tech_stack=${tech_stack}` 
   const headers = { 'content-type': 'application/json' }

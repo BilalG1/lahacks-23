@@ -3,6 +3,9 @@ import { config } from '../../constants/config';
 
 const reset = () => {
   fetch(`${config.apiUrl}/reset-ids`, { method: 'POST' })
+  for (let i = 375; i < 379; i++) {
+    fetch(`${config.apiUrl}/containers/${i}`, { method: 'DELETE' })
+  }
 }
 </script>
 
