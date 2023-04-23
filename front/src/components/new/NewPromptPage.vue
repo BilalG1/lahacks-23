@@ -45,7 +45,7 @@ const moveItem = (ind: number, way: 'up' | 'down') => {
 }
 const confirmDelete = (ind: number) => {
   shutoff.value = 0;
-  $q.dialog({ message: 'Are you sure you want to remove this file from your plan?', cancel: true })
+  $q.dialog({ html: true, message: '<div style="color: black;">Are you sure you want to remove this file from your plan?</div>', cancel: true })
     .onOk(() => filesPlanned.value.splice(ind, 1))
 }
 const addItem = () => {
