@@ -2,25 +2,25 @@
   <div class="common-layout">
     <el-container>
       <el-header>
-          <div class="flex flex-wrap items-center">
-            <el-dropdown>
-              <el-button type="primary"> File </el-button>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item>
-                    <label for="folder"> Open Folder </label>
-                    <input type="file" id="folder" @change="handleOpenFolder" hidden webkitdirectory>
-                  </el-dropdown-item>
-                  <el-dropdown-item>
-                    <label for="file"> Open File </label>
-                    <input type="file" id="file" @change="handleOpenFile" hidden >
-                  </el-dropdown-item>
-                  <el-dropdown-item>Action 3</el-dropdown-item>
-                  <el-dropdown-item>Action 4</el-dropdown-item>
-                  <el-dropdown-item>Action 5</el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
+        <div class="flex flex-wrap items-center">
+          <el-dropdown>
+            <el-button type="primary"> File </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item>
+                  <label for="folder"> Open Folder </label>
+                  <input type="file" id="folder" @change="handleOpenFolder" hidden webkitdirectory>
+                </el-dropdown-item>
+                <el-dropdown-item>
+                  <label for="file"> Open File </label>
+                  <input type="file" id="file" @change="handleOpenFile" hidden>
+                </el-dropdown-item>
+                <el-dropdown-item>Action 3</el-dropdown-item>
+                <el-dropdown-item>Action 4</el-dropdown-item>
+                <el-dropdown-item>Action 5</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
           <el-button type="primary" @click="handleCompile"> Compile </el-button>
         </div>
       </el-header>
@@ -37,10 +37,13 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref} from "vue";
+import { onMounted, ref } from "vue";
 import loader from "@monaco-editor/loader";
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import _ from 'lodash'
+import * as Y from 'yjs'
+import { WebrtcProvider } from 'y-webrtc'
+import { MonacoBinding } from 'y-monaco'
 
 const code = ref('')
 const activeFile = ref('')
@@ -66,12 +69,23 @@ interface Item {
 
 onMounted(() => {
   loader.init().then((monaco) => {
+    const ydoc = new Y.Doc()
+    const provider = new WebrtcProvider('monaco', ydoc)
+    const type = ydoc.getText('monaco')
     const editorOptions = {
       language: "typescript",
       // minimap: { enabled: false },
       theme: 'vs-dark'
     }
-    editor = monaco.editor.create(document.getElementById("editor"),   editorOptions);
+    editor = monaco.editor.create(document.getElementById("editor"), editorOptions);
+
+    const monacoBinding = new MonacoBinding(
+      type,
+      editor.getModel(),
+      new Set([editor]),
+      provider.awareness
+    )
+
     editor.onDidChangeModelContent(() => {
       // Update the content of the active file in the fileContent object
       fileList.value[activeFile.value].fileContent = editor.getValue();
@@ -82,7 +96,7 @@ onMounted(() => {
 const fileList = ref({});
 const fileTree = ref<Tree[]>([]);
 
-function addToFileList(file, parent){
+function addToFileList(file, parent) {
 
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -101,7 +115,7 @@ function addToFileList(file, parent){
 }
 
 function buildTree(filenames) {
-  const root = { type: "directory", label: ".", children:[]};
+  const root = { type: "directory", label: ".", children: [] };
 
   for (const filename of filenames) {
     const parts = filename.split("/");
@@ -113,7 +127,7 @@ function buildTree(filenames) {
 
       if (!node) {
         console.log(nodeName)
-        node = { type: "directory", label: nodeName, content: fileList.value[nodeName].fileContent};
+        node = { type: "directory", label: nodeName, content: fileList.value[nodeName].fileContent };
         if (!currentNode.children) {
           currentNode.children = [];
         }
@@ -135,14 +149,14 @@ function buildTree(filenames) {
   return root;
 }
 
-const handleOpenFolder = async(event) => {
+const handleOpenFolder = async (event) => {
   const files = event.target.files;
   const filePaths = <string[]>[];
 
   for (const file of files) {
     if (!file.isDirectory) {
       const folders = file.webkitRelativePath.split('\/')
-      const parent = folders.length > 1 ? folders[folders.length-2] : ''
+      const parent = folders.length > 1 ? folders[folders.length - 2] : ''
       filePaths.push(file.webkitRelativePath);
       await addToFileList(file, parent)
     }
@@ -150,7 +164,7 @@ const handleOpenFolder = async(event) => {
   fileTree.value.push(buildTree(filePaths));
 }
 
-const handleOpenFile = async(event) => {
+const handleOpenFile = async (event) => {
   const file = event.target.files[0];
   await addToFileList(file, parent)
   fileTree.value.push({
@@ -160,11 +174,11 @@ const handleOpenFile = async(event) => {
 }
 
 const defaultProps = {
-    children: 'children',
-    label: 'label',
+  children: 'children',
+  label: 'label',
 }
 
-const handleCompile = async() => {
+const handleCompile = async () => {
   const obj = {
     "label": ".",
     "children": fileTree.value
@@ -180,6 +194,6 @@ a {
 }
 
 .common-layout {
-  padding:20px;
+  padding: 20px;
 }
 </style>
