@@ -1,15 +1,15 @@
-from fastapi import FastAPI, Form, File, UploadFile, Depends
+from fastapi import FastAPI, Form, File, UploadFile, Depends, Request
 from fastapi.responses import JSONResponse
 import docker
 import tempfile
 import os
 import shutil
-from typing import Any, List, Union, Optional
+from typing import Any, List, Union, Optional, Annotated
+from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
+import openai
 from pydantic import BaseModel
-
-# TODO: need to have some way to know which user is using which backend as the process for killing and 
-# re-running the backed will be different for each backend
-userBackend={"user1": "node", "user2": "flask"}    
+import datetime
 
 app = FastAPI()
 client = docker.from_env()
@@ -33,9 +33,22 @@ def process_file_node(node: FileNode, current_path: str):
         for child in node.children:
             process_file_node(child, new_path)
 
+active_ids = { usrid: datetime.datetime(2023, 1, 1) for usrid in range(375, 379) }
+usrid_container_map = {usrid: None for usrid in range(375, 379) }
+usrid_techstack_map = {usrid: None for usrid in range(375, 379) }
 
-@app.post("/upload-files/{container_id}")
-async def upload_files(container_id: str, file_structure: FileNode):
+@app.get('/gen-id')
+def get_id(): 
+    for usrid in range(375, 379):
+        if (datetime.datetime.now() - active_ids[usrid]).total_seconds() > 60 * 10:
+            active_ids[usrid] = datetime.datetime.now()
+            return usrid
+    return False
+
+# endpoint for edits+additions, initial uploads should use /upload-files/{usrid}
+@app.post("/update-files/{usrid}")
+async def upload_files(usrid: int, file_structure: FileNode):
+    container_id = usrid_container_map[usrid]
     try:
         # Connect to the Docker daemon
         client = docker.from_env()
@@ -44,12 +57,11 @@ async def upload_files(container_id: str, file_structure: FileNode):
 
         # Process the JSON object and create files and directories in the shared directory
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        local_shared_path = f"{dir_path}/shared"
+        local_shared_path = f"{dir_path}/{usrid}"
 
         process_file_node(file_structure, local_shared_path)
 
         # Python script to move the files and directories and re-run npm start
-        target_path = "/app/jiggy"
         move_file_and_restart_script = f'''
 import os
 import shutil
@@ -82,7 +94,7 @@ if __name__ == '__main__':
 
 '''
 
-        # Create a new file with the move_file_and_restart_script content in the shared directory
+        # Create/update a file with the move_file_and_restart_script content in the shared directory
         script_name = "move_and_restart.py"
         script_path = os.path.join(local_shared_path, script_name)
 
@@ -90,7 +102,7 @@ if __name__ == '__main__':
             script_file.write(move_file_and_restart_script)
 
         # Construct the file path inside the container
-        container_script_path = os.path.join('/usr/src/app/shared/', script_name)
+        container_script_path = os.path.join(f"/usr/src/app/{usrid}/", script_name)
 
         # Execute the script inside the container
         exec_result = container.exec_run(f"python {container_script_path}")
@@ -99,22 +111,47 @@ if __name__ == '__main__':
         if exec_result.exit_code != 0:
             raise Exception("Error executing the move_file_and_restart script: {}".format(exec_result.output.decode()))
 
-        return {"message": f"Files from the JSON object uploaded and moved to {target_path} in container {container_id}"}
+        return {"message": f"Files from the JSON object uploaded and moved to /usr/src/app/{usrid}/ in container {container_id}"}
     except docker.errors.NotFound:
         return {"error": f"Container {container_id} not found"}, 404
     except Exception as e:
         return {"error": str(e)}, 500
 
 
-# async def upload( # for future use
-#     repo_url: str = Form(...),
-#     tech_stack: str = Form(...),
-#     port_number: str = Form(...),
-#     username: str = Form(...)
-# ):
+@app.post("/upload-files/{usrid}")
+async def upload(usrid: int, file_structure: FileNode, tech_stack: str):
+    
+    external_frontend_port = usrid%375 + 8081
+    external_backend_port = usrid%375 + 3001
+
+    # Copy the uploaded folder to a temp_dir
+    temp_dir = tempfile.mkdtemp()
+    process_file_node(file_structure, temp_dir)
+
+    # Define the absolute path where you want to mount the shared volume
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    local_mount_path = f"{dir_path}/{usrid}" #HERE
+
+    # Build the Docker container with the user's code
+    container_name = str(usrid)
+    container = build_and_run_container(
+        temp_dir, container_name, tech_stack, local_mount_path, external_frontend_port, external_backend_port, usrid
+    )
+
+    # Clean up the temporary directory
+    # shutil.rmtree(temp_dir)
+
+    # Return the URL to the user
+    # TODO: integrate this with the Nginx - not sure if nginx only needs portnumbers or something more
+    url = generate_url(container)
+    return JSONResponse(content={"url": url})
+
+
+# /uploadrepo is not supported rn but it works 
 # Receive the user's repository
-@app.post("/uploadrepo")
-async def upload(repo_url: str = Form(...)):
+@app.post("/uploadrepo/{usrid}")
+async def upload(usrid: int, repo_url: str = Form(...)):
+    
     # Clone or download the repository to a temporary directory
     temp_dir = tempfile.mkdtemp()
     clone_repo(repo_url, temp_dir)
@@ -127,7 +164,7 @@ async def upload(repo_url: str = Form(...)):
     local_mount_path = f"{dir_path}/shared" #HERE
 
     # Build the Docker container with the user's code
-    container_name = generate_unique_container_name()
+    container_name = str(usrid)
     container = build_and_run_container(
         temp_dir, container_name, tech_stack, local_mount_path
     )
@@ -140,8 +177,11 @@ async def upload(repo_url: str = Form(...)):
     url = generate_url(container)
     return JSONResponse(content={"url": url})
 
-@app.delete("/containers/{container_id}")
-async def delete_container(container_id: str):
+@app.delete("/containers/{usrid}")
+async def delete_container(usrid: int):
+    container_id = usrid_container_map[usrid]
+    usrid_container_map[usrid] = None
+
     try:
         # Connect to the Docker daemon
         client = docker.from_env()
@@ -165,16 +205,11 @@ def clone_repo(repo_url, temp_dir):
     os.system(f"git clone {repo_url} {temp_dir}")
 
 
-def generate_unique_container_name():
-    # TODO: name container with username+uuid
-    import uuid
+def build_and_run_container(temp_dir, container_name, tech_stack, local_mount_path, external_frontend_port, external_backend_port, usrid):
+    # Hard coded these, need to make sure every project has the same configuration
+    internal_frontend_port = 5173
+    internal_backend_port = 8000
 
-    return f"container-{str(uuid.uuid4())}"
-
-
-def build_and_run_container(temp_dir, container_name, tech_stack, local_mount_path):
-    internal_port = 8080
-    external_port = 12345
     # Copy the appropriate Dockerfile into the user's repo
     dockerfile_path = select_dockerfile(tech_stack)
     shutil.copy(dockerfile_path, os.path.join(temp_dir, "Dockerfile"))
@@ -185,28 +220,22 @@ def build_and_run_container(temp_dir, container_name, tech_stack, local_mount_pa
     # Create the bind mount
     bind_mount = docker.types.Mount(
         source=local_mount_path,
-        target="/usr/src/app/shared", #HERE
+        target=f"/usr/src/app/{usrid}", #HERE
         type="bind",
     )
 
-    # NOTE: not using subprocess kinda breaks this as it creates three containers instead of one when using docker python sdk - if subprocesses doesn't work on vm, can switch back
-    # Build and run the Docker container
-    # image, _ = client.images.build(path=temp_dir, tag=container_name)
-    # container = client.containers.run(
-    #     image=image,
-    #     ports={f"{internal_port}/tcp": external_port},
-    #     mounts=[bind_mount],
-    #     detach=True,
-    # )
+    # build and run docker container
     import subprocess
 
     subprocess.run(["docker", "build", "-t", container_name, temp_dir])
     container = client.containers.run(
         image=container_name,
-        ports={f"{internal_port}/tcp": external_port},
+        ports={f"{internal_frontend_port}/tcp": external_frontend_port, f"{internal_backend_port}/tcp": external_backend_port},
         mounts=[bind_mount],
         detach=True,
     )
+
+    usrid_container_map[usrid] = container.id
 
     return container
 
@@ -229,6 +258,7 @@ def select_dockerfile(tech_stack):
         "react-express": "containers/Dockerfile.react-express",
         "vue-flask": "containers/Dockerfile.vue-flask",
         "react-flask": "containers/Dockerfile.react-flask",
+        "vue-express": "containers/Dockerfile.vue-express",
         # Add more mappings as needed
     }
 
