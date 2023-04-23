@@ -12,6 +12,9 @@ body, html {
   margin: 0;
   background: #1e1e1e;
 }
+/* * {
+  color: black
+} */
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
