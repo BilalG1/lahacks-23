@@ -3,6 +3,7 @@ from typing import Any, List
 from pydantic import BaseModel
 import json
 
+# I think this is automatically transformed into the required   
 file_structure = {
   "filename": "main",
   "content": None,
