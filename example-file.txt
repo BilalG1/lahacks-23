@@ -1,0 +1,22 @@
+file_structure = {
+  "filename": "main",
+  "content": None,
+  "children":[
+    {
+      "filename": "child 1",
+      "content": "some txt",
+      "children": []
+    },
+    {
+      "filename":"subdir",
+      "content": None,
+      "children": [
+        {
+            "filename": "subdir-child",
+            "content": "la hacks",
+            "children": []
+        }
+      ]
+    }
+  ]
+}
