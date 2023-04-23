@@ -31,12 +31,21 @@ onMounted(() => {
 
     editor = monaco.editor.create(document.getElementById("editor"), editorOptions);
 
-    // Client side text change event. Send websocket message
+    // Client side text change event. 
     editor.onDidChangeModelContent(function (e) {
+      // Send websocket message to editText
       if (isSocket === false) {
         socket.emit('editText', e)
-      } else
+      } else {
         isSocket = false
+      }
+
+      // Update file on server
+      if (isSocket === false) {
+        socket.emit('updateFile', editor.getModel().createSnapshot().read() ?? "")
+      } else {
+        isSocket = false
+      }
     });
   });
 });

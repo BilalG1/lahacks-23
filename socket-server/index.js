@@ -1,4 +1,5 @@
 const http = require('http').createServer();
+const fs = require("fs");
 
 const io = require('socket.io')(http, {
   cors: { origin: "*" }
@@ -7,9 +8,15 @@ const io = require('socket.io')(http, {
 io.on('connection', (socket) => {
   console.log('a user connected');
 
+  // Update all users when a new user edits text
   socket.on('editText', (message) => {
-    console.log(message);
     socket.broadcast.emit('editText', message);
+  });
+
+  // Save file when any user updates
+  socket.on('updateFile', (text) => {
+    const fileStream = fs.createWriteStream("./temp.txt");
+    fileStream.write(text);
   });
 });
 
