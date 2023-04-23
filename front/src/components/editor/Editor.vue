@@ -2,31 +2,72 @@
   <div class="common-layout">
     <el-container>
       <el-header>
-          <div class="flex flex-wrap items-center">
-            <el-dropdown>
-              <el-button type="primary"> File </el-button>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item>
+        <div class="flex flex-wrap items-center">
+            <el-menu
+              class="el-menu-demo"
+              mode="horizontal"
+              :ellipsis="false"
+              @select="handleSelect"
+            >
+              <el-sub-menu index="1"> 
+                <template #title> File </template>
+                  <el-menu-item>
                     <label for="folder"> Open Folder </label>
                     <input type="file" id="folder" @change="handleOpenFolder" hidden webkitdirectory>
-                  </el-dropdown-item>
-                  <el-dropdown-item>
+                  </el-menu-item>
+                  <el-menu-item>
                     <label for="file"> Open File </label>
                     <input type="file" id="file" @change="handleOpenFile" hidden >
-                  </el-dropdown-item>
-                  <!-- <el-dropdown-item>Action 3</el-dropdown-item>
-                  <el-dropdown-item>Action 4</el-dropdown-item>
-                  <el-dropdown-item>Action 5</el-dropdown-item> -->
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
-          <el-button type="primary" @click="handleCompile"> Compile </el-button>
+                  </el-menu-item>
+              </el-sub-menu>
+              <el-menu-item index="2">
+                <template #title> 
+                  <span v-if="!showDelete" @click="showDelete=true" > Delete </span>
+                  <span v-else @click="showDelete=false"> Done </span>
+                 </template>
+              </el-menu-item>
+              <el-menu-item index="3">
+                <template #title> 
+                  <span @click="handleCompile" > Compile </span>
+                 </template>
+              </el-menu-item>
+            </el-menu>
+            <el-autocomplete
+                v-model="language"
+                style="padding-left: 50px"
+                :fetch-suggestions="querySearch"
+                clearable
+                class="inline-input w-50"
+                placeholder="Input Language"
+                @select="handleSelect"
+              />
         </div>
       </el-header>
       <el-container>
         <el-aside width="200px">
-          <el-tree id="fileTreeView" :data="fileTree" :props="defaultProps" @node-click="handleNodeClick" />
+          <el-tree 
+            id="fileTreeView" 
+            draggable
+            default-expand-all
+            :data="fileTree" 
+            :props="defaultProps" 
+            @node-click="handleNodeClick" 
+            @node-drag-start="handleDragStart"
+            @node-drag-enter="handleDragEnter"
+            @node-drag-leave="handleDragLeave"
+            @node-drag-over="handleDragOver"
+            @node-drag-end="handleDragEnd"
+            @node-drop="handleDrop"
+          >
+          <template #default="{ node, data }">
+            <span class="custom-tree-node">
+              <span>{{ node.label }}</span>
+              <span>
+                <a v-show="showDelete" style="margin-right: 10%;" @click="remove(node, data)"> Delete </a>
+              </span>
+            </span>
+          </template>
+          </el-tree>
         </el-aside>
         <el-main>
           <div id="editor" style="width: 100vw; height: 100vh" class="pt-4" />
@@ -45,10 +86,13 @@ import _ from 'lodash'
 const code = ref('')
 const activeFile = ref('')
 const editorRef = ref(null)
+const showDelete = ref(false)
 let editor;
 const handleNodeClick = (data: Tree) => {
   activeFile.value = data.label
-  editor.setValue(fileList.value[data.label].fileContent)
+  if (fileList.value[data.label].fileContent){
+    editor.setValue(fileList.value[data.label].fileContent)
+  }
 }
 interface Tree {
   label: string
@@ -63,7 +107,7 @@ interface Item {
 onMounted(() => {
   loader.init().then((monaco) => {
     const editorOptions = {
-      language: "typescript",
+      language: language.value,
       // minimap: { enabled: false },
       theme: 'vs-dark'
     }
@@ -77,6 +121,8 @@ onMounted(() => {
 
 const fileList = ref({});
 const fileTree = ref<Tree[]>([]);
+const language = ref('');
+const languages = ref([  {'value': 'javascript'},  {'value': 'typescript'},  {'value': 'css'},  {'value': 'html'},  {'value': 'json'},  {'value': 'markdown'},  {'value': 'xml'},  {'value': 'yaml'},  {'value': 'python'},  {'value': 'java'},  {'value': 'csharp'},  {'value': 'cpp'},  {'value': 'ruby'},  {'value': 'php'},  {'value': 'go'},  {'value': 'rust'},  {'value': 'swift'},  {'value': 'kotlin'},  {'value': 'sql'}]);
 
 function addToFileList(file, parent){
 
@@ -164,6 +210,79 @@ const handleCompile = async() => {
   }
   console.log(JSON.stringify(obj, null, 2));
 }
+
+const handleDragStart = (node: Node, ev: DragEvents) => {
+  console.log('drag start', node)
+}
+
+const handleDragEnter = (
+  draggingNode: Node,
+  dropNode: Node,
+  ev: DragEvents
+) => {
+  console.log('tree drag enter:', dropNode.label)
+}
+const handleDragLeave = (
+  draggingNode: Node,
+  dropNode: Node,
+  ev: DragEvents
+) => {
+  console.log('tree drag leave:', dropNode.label)
+}
+const handleDragOver = (draggingNode: Node, dropNode: Node, ev: DragEvents) => {
+  console.log('tree drag over:', dropNode.label)
+}
+const handleDragEnd = (
+  draggingNode: Node,
+  dropNode: Node,
+  dropType: NodeDropType,
+  ev: DragEvents
+) => {
+  console.log('tree drag end:', dropNode && dropNode.label, dropType)
+}
+const handleDrop = (
+  draggingNode: Node,
+  dropNode: Node,
+  dropType: NodeDropType,
+  ev: DragEvents
+) => {
+  console.log('tree drop:', dropNode.label, dropType)
+  console.log(JSON.stringify(fileTree.value, null, 2))
+}
+
+const remove = (node: Node, data: Tree) => {
+  const parent = node.parent
+  const children: Tree[] = parent.data.children || parent.data
+  console.log(children, data)
+
+  const index = children.findIndex((d) => d.label === data.label)
+  children.splice(index, 1)
+  console.log(fileList.value[data.label])
+  delete fileList.value[data.label];
+}
+
+const createFilter = (queryString: string) => {
+  return (language: {}) => {
+    return (
+      language.value.toLowerCase().indexOf(queryString.toLowerCase()) === 0
+    )
+  }
+}
+
+const querySearch = (queryString: string, cb: any) => {
+  const results = queryString
+    ? languages.value.filter(createFilter(queryString))
+    : languages.value
+  cb(results)
+}
+
+const handleSelect = (item: string) => {
+  console.log(item)
+  language.value = item.value;
+  const model = editor.getModel();
+  monaco.editor.setModelLanguage(model, language.value);
+}
+
 </script>
 
 <style scoped>
